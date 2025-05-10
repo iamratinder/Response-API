@@ -5,5 +5,3 @@ langchain-groq==0.0.1
 langchain
 langchain-core
 pydantic==2.6.1
-logging>=0.5.1.2
-python-json-logger>=2.0.7
