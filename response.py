@@ -21,7 +21,7 @@ app.add_middleware(
 )
 
 class ChatPrompt(BaseModel):
-    text: str = Field(..., min_length=1, description="The prompt text for chat")
+    text: str = Field(..., min_length=1, description="The prompt text for chat") # ... -> required field
 
 class JokePrompt(BaseModel):
     topic: str = Field(..., min_length=1, description="The topic for joke generation")
