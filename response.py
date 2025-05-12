@@ -1,12 +1,14 @@
 from fastapi import FastAPI, HTTPException, status
-from jokes.setup import setup_model
-from jokes.create_joke_template import setup_joke_template
+from chat.setup import setup_model as chat_model_setup
+from jokes.setup import setup_model as joke_model_setup
+from jokes.create_joke_template import initial_prompt, final_prompt
 from jokes.get_joke import get_joke
 import os
 import logging
 from pydantic import BaseModel, Field
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Dict
+import random 
 
 logger = logging.getLogger(__name__)
 
@@ -26,9 +28,13 @@ class ChatPrompt(BaseModel):
 class JokePrompt(BaseModel):
     topic: str = Field(..., min_length=1, description="The topic for joke generation")
 
-chat_model = setup_model()
+chat_model = chat_model_setup()
+joke_model = joke_model_setup()
+
 if not chat_model:
     raise RuntimeError("Failed to initialize chat model")
+if not joke_model:
+    raise RuntimeError("Failed to initialize joke model")
 
 @app.post("/chat", response_model=Dict[str, str])
 async def chat_endpoint(prompt: ChatPrompt):
@@ -45,9 +51,15 @@ async def chat_endpoint(prompt: ChatPrompt):
 @app.post("/joke", response_model=Dict[str, str])
 async def joke_endpoint(prompt: JokePrompt):
     try:
-        joke_template = setup_joke_template()
-        joke = get_joke(joke_template, chat_model, prompt.topic)
-        return {"joke": joke}
+        styles = ['sarcastic', 'pun-based', 'absurdist', 'dark', 'dad joke', 'meta', 'observational']
+        random_style = random.choice(styles)
+        initial = initial_prompt()
+        initial_prompt_input = initial.invoke({"random_style":random_style, "topic":prompt.topic})
+        initial_result = joke_model.invoke(initial_prompt_input)
+        final = final_prompt()
+        final_prompt_input = final.invoke({"random_style":random_style, "topic":prompt.topic, "joke":initial_result})
+        result = joke_model.invoke(final_prompt_input)
+        return {"joke": result.content}
     except Exception as e:
         logger.error(f"Joke generation error: {str(e)}")
         raise HTTPException(

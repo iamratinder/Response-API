@@ -15,8 +15,8 @@ def setup_model() -> Optional[ChatGroq]:
             raise ValueError("GROQ_API_KEY not found in environment variables")
         
         model = ChatGroq(
-            model_name="llama3-8b-8192",
-            temperature=1.2
+            model_name="llama-3.3-70b-versatile",
+            temperature=0.9
         )
         logger.info("Chat model initialized successfully")
         return model
